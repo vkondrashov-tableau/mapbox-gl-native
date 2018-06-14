@@ -661,7 +661,7 @@
 
         NSExpression *constantExpression = [NSExpression expressionWithFormat:@"'Line Pattern'"];
         layer.linePattern = constantExpression;
-        mbgl::style::PropertyValue<std::string> propertyValue = { "Line Pattern" };
+        mbgl::style::DataDrivenPropertyValue<std::string> propertyValue = { "Line Pattern" };
         XCTAssertEqual(rawLayer->getLinePattern(), propertyValue,
                        @"Setting linePattern to a constant value expression should update line-pattern.");
         XCTAssertEqualObjects(layer.linePattern, constantExpression,
@@ -689,12 +689,6 @@
                       @"Unsetting linePattern should return line-pattern to the default value.");
         XCTAssertEqualObjects(layer.linePattern, defaultExpression,
                               @"linePattern should return the default value after being unset.");
-
-        functionExpression = [NSExpression expressionForKeyPath:@"bogus"];
-        XCTAssertThrowsSpecificNamed(layer.linePattern = functionExpression, NSException, NSInvalidArgumentException, @"MGLLineLayer should raise an exception if a camera-data expression is applied to a property that does not support key paths to feature attributes.");
-        functionExpression = [NSExpression expressionWithFormat:@"mgl_step:from:stops:(bogus, %@, %@)", constantExpression, @{@18: constantExpression}];
-        functionExpression = [NSExpression expressionWithFormat:@"mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', nil, %@)", @{@10: functionExpression}];
-        XCTAssertThrowsSpecificNamed(layer.linePattern = functionExpression, NSException, NSInvalidArgumentException, @"MGLLineLayer should raise an exception if a camera-data expression is applied to a property that does not support key paths to feature attributes.");
         // Transition property test
         layer.linePatternTransition = transitionTest;
         auto toptions = rawLayer->getLinePatternTransition();

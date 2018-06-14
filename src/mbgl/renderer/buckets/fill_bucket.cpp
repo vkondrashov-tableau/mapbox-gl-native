@@ -40,7 +40,8 @@ FillBucket::FillBucket(const BucketParameters& parameters, const std::vector<con
 }
 
 void FillBucket::addFeature(const GeometryTileFeature& feature,
-                            const GeometryCollection& geometry) {
+                            const GeometryCollection& geometry,
+                            const ImagePositions&) {
     for (auto& polygon : classifyRings(geometry)) {
         // Optimize polygons with many interior rings for earcut tesselation.
         limitHoles(polygon, 500);
@@ -105,7 +106,7 @@ void FillBucket::addFeature(const GeometryTileFeature& feature,
     }
 
     for (auto& pair : paintPropertyBinders) {
-        pair.second.populateVertexVectors(feature, vertices.vertexSize());
+        pair.second.populateVertexVectors(feature, vertices.vertexSize(), {});
     }
 }
 

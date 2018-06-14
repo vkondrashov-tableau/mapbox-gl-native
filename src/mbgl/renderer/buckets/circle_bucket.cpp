@@ -39,7 +39,8 @@ bool CircleBucket::hasData() const {
 }
 
 void CircleBucket::addFeature(const GeometryTileFeature& feature,
-                              const GeometryCollection& geometry) {
+                                     const GeometryCollection& geometry,
+                                     const ImagePositions&) {
     constexpr const uint16_t vertexLength = 4;
 
     for (auto& circle : geometry) {
@@ -87,7 +88,7 @@ void CircleBucket::addFeature(const GeometryTileFeature& feature,
     }
 
     for (auto& pair : paintPropertyBinders) {
-        pair.second.populateVertexVectors(feature, vertices.vertexSize());
+        pair.second.populateVertexVectors(feature, vertices.vertexSize(), {});
     }
 }
 

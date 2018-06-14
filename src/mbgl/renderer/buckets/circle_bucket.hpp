@@ -17,8 +17,9 @@ class CircleBucket : public Bucket {
 public:
     CircleBucket(const BucketParameters&, const std::vector<const RenderLayer*>&);
 
-    void addFeature(const GeometryTileFeature&,
-                    const GeometryCollection&) override;
+    virtual void addFeature(const GeometryTileFeature&,
+                            const GeometryCollection&,
+                            const mbgl::ImagePositions&) override;
     bool hasData() const override;
 
     void upload(gl::Context&) override;

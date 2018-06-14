@@ -52,7 +52,7 @@ TEST(Buckets, CircleBucket) {
     ASSERT_FALSE(bucket.needsUpload());
 
     GeometryCollection point { { { 0, 0 } } };
-    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point);
+    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point, {});
     ASSERT_TRUE(bucket.hasData());
     ASSERT_TRUE(bucket.needsUpload());
 
@@ -71,7 +71,7 @@ TEST(Buckets, FillBucket) {
     ASSERT_FALSE(bucket.needsUpload());
 
     GeometryCollection polygon { { { 0, 0 }, { 0, 1 }, { 1, 1 } } };
-    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Polygon, polygon, properties }, polygon);
+    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Polygon, polygon, properties }, polygon, {});
     ASSERT_TRUE(bucket.hasData());
     ASSERT_TRUE(bucket.needsUpload());
 
@@ -82,19 +82,20 @@ TEST(Buckets, FillBucket) {
 TEST(Buckets, LineBucket) {
     HeadlessBackend backend({ 512, 256 });
     BackendScope scope { backend };
+    style::LineLayoutProperties::PossiblyEvaluated layout;
 
     gl::Context context;
-    LineBucket bucket { { {0, 0, 0}, MapMode::Static, 1.0 }, {}, {} };
+    LineBucket bucket { layout, {}, 10.0f, 0 };
     ASSERT_FALSE(bucket.hasData());
     ASSERT_FALSE(bucket.needsUpload());
 
     // Ignore invalid feature type.
     GeometryCollection point { { { 0, 0 } } };
-    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point);
+    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point, {});
     ASSERT_FALSE(bucket.hasData());
 
     GeometryCollection line { { { 0, 0 }, { 1, 1 } } };
-    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::LineString, line, properties }, line);
+    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::LineString, line, properties }, line, {});
     ASSERT_TRUE(bucket.hasData());
     ASSERT_TRUE(bucket.needsUpload());
 
@@ -123,7 +124,7 @@ TEST(Buckets, SymbolBucket) {
 
     // SymbolBucket::addFeature() is a no-op.
     GeometryCollection point { { { 0, 0 } } };
-    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point);
+    bucket.addFeature(StubGeometryTileFeature { {}, FeatureType::Point, point, properties }, point, {});
     ASSERT_FALSE(bucket.hasData());
     ASSERT_FALSE(bucket.needsUpload());
 

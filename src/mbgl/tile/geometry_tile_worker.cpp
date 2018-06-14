@@ -2,12 +2,15 @@
 #include <mbgl/tile/geometry_tile_data.hpp>
 #include <mbgl/tile/geometry_tile.hpp>
 #include <mbgl/layout/symbol_layout.hpp>
+#include <mbgl/layout/pattern_layout.hpp>
 #include <mbgl/renderer/bucket_parameters.hpp>
 #include <mbgl/renderer/group_by_layout.hpp>
 #include <mbgl/style/filter.hpp>
 #include <mbgl/style/layers/symbol_layer_impl.hpp>
 #include <mbgl/renderer/layers/render_symbol_layer.hpp>
+#include <mbgl/renderer/layers/render_line_layer.hpp>
 #include <mbgl/renderer/buckets/symbol_bucket.hpp>
+#include <mbgl/renderer/buckets/line_bucket.hpp>
 #include <mbgl/util/logging.hpp>
 #include <mbgl/util/constants.hpp>
 #include <mbgl/util/string.hpp>
@@ -188,10 +191,10 @@ void GeometryTileWorker::symbolDependenciesChanged() {
     try {
         switch (state) {
         case Idle:
-            if (symbolLayoutsNeedPreparation) {
-                // symbolLayoutsNeedPreparation can only be set true by parsing
+            if (symbolLayoutsNeedPreparation || patternNeedsLayout) {
+                // symbolLayoutsNeedPreparation and patternNeedsLayout can only be set true by parsing
                 // and the parse result can only be cleared by performSymbolLayout
-                // which also clears symbolLayoutsNeedPreparation
+                // which also clears symbolLayoutsNeedPreparation and patternNeedsLayout
                 assert(hasPendingParseResult());
                 performSymbolLayout();
                 coalesce();
@@ -267,11 +270,12 @@ void GeometryTileWorker::onGlyphsAvailable(GlyphMap newGlyphMap) {
     symbolDependenciesChanged();
 }
 
-void GeometryTileWorker::onImagesAvailable(ImageMap newImageMap, uint64_t imageCorrelationID_) {
+void GeometryTileWorker::onImagesAvailable(ImageMap newIconMap, ImageMap newPatternMap, uint64_t imageCorrelationID_) {
     if (imageCorrelationID != imageCorrelationID_) {
         return; // Ignore outdated image request replies.
     }
-    imageMap = std::move(newImageMap);
+    imageMap = std::move(newIconMap);
+    patternMap = std::move(newPatternMap);
     pendingImageDependencies.clear();
     symbolDependenciesChanged();
 }
@@ -292,6 +296,7 @@ void GeometryTileWorker::requestNewGlyphs(const GlyphDependencies& glyphDependen
 
 void GeometryTileWorker::requestNewImages(const ImageDependencies& imageDependencies) {
     pendingImageDependencies = imageDependencies;
+
     if (!pendingImageDependencies.empty()) {
         parent.invoke(&GeometryTile::getImages, std::make_pair(pendingImageDependencies, ++imageCorrelationID));
     }
@@ -328,7 +333,16 @@ void GeometryTileWorker::parse() {
         }
     }
 
+    std::vector<std::string> patternOrder;
+    for (auto it = layers->rbegin(); it != layers->rend(); it++) {
+        if ((*it)->type == LayerType::Line) {
+            patternOrder.push_back((*it)->id);
+        }
+    }
+
     std::unordered_map<std::string, std::unique_ptr<SymbolLayout>> symbolLayoutMap;
+    std::unordered_map<std::string, std::unique_ptr<PatternLayout>> patternLayoutMap;
+
     buckets.clear();
     featureIndex = std::make_unique<FeatureIndex>(*data ? (*data)->clone() : nullptr);
     BucketParameters parameters { id, mode, pixelRatio };
@@ -368,6 +382,11 @@ void GeometryTileWorker::parse() {
                 parameters, group, std::move(geometryLayer), glyphDependencies, imageDependencies);
             symbolLayoutMap.emplace(leader.getID(), std::move(layout));
             symbolLayoutsNeedPreparation = true;
+        } else if (leader.is<RenderLineLayer>()) {
+            auto layout = leader.as<RenderLineLayer>()->createLayout(
+                parameters, group, std::move(geometryLayer), imageDependencies);
+            patternLayoutMap.emplace(leader.getID(), std::move(layout));
+            patternNeedsLayout = true;
         } else {
             const Filter& filter = leader.baseImpl->filter;
             const std::string& sourceLayerID = leader.baseImpl->sourceLayer;
@@ -380,17 +399,17 @@ void GeometryTileWorker::parse() {
                     continue;
 
                 GeometryCollection geometries = feature->getGeometries();
-                bucket->addFeature(*feature, geometries);
+                bucket->addFeature(*feature, geometries, {});
                 featureIndex->insert(geometries, i, sourceLayerID, leader.getID());
             }
 
             if (!bucket->hasData()) {
                 continue;
             }
-
             for (const auto& layer : group) {
                 buckets.emplace(layer->getID(), bucket);
             }
+
         }
     }
 
@@ -399,6 +418,14 @@ void GeometryTileWorker::parse() {
         auto it = symbolLayoutMap.find(symbolLayerID);
         if (it != symbolLayoutMap.end()) {
             symbolLayouts.push_back(std::move(it->second));
+        }
+    }
+
+    patternLayouts.clear();
+    for (const auto& patternLayerID : patternOrder) {
+        auto it = patternLayoutMap.find(patternLayerID);
+        if (it != patternLayoutMap.end()) {
+            patternLayouts.push_back(std::move(it->second));
         }
     }
 
@@ -434,13 +461,13 @@ void GeometryTileWorker::performSymbolLayout() {
     MBGL_TIMING_START(watch)
     optional<AlphaImage> glyphAtlasImage;
     optional<PremultipliedImage> iconAtlasImage;
+    ImageAtlas iconAtlas;
 
     if (symbolLayoutsNeedPreparation) {
         GlyphAtlas glyphAtlas = makeGlyphAtlas(glyphMap);
-        ImageAtlas imageAtlas = makeImageAtlas(imageMap);
+        iconAtlas = makeImageAtlas(imageMap, patternMap);
 
         glyphAtlasImage = std::move(glyphAtlas.image);
-        iconAtlasImage = std::move(imageAtlas.image);
 
         for (auto& symbolLayout : symbolLayouts) {
             if (obsolete) {
@@ -448,10 +475,25 @@ void GeometryTileWorker::performSymbolLayout() {
             }
 
             symbolLayout->prepare(glyphMap, glyphAtlas.positions,
-                                  imageMap, imageAtlas.positions);
+                                  imageMap, iconAtlas.iconPositions);
         }
 
         symbolLayoutsNeedPreparation = false;
+    }
+
+    if (!iconAtlas.image.valid()) {
+        iconAtlas = makeImageAtlas(imageMap, patternMap);
+    }
+
+    for (auto& patternLayout : patternLayouts) {
+        if (obsolete) {
+            return;
+        }
+
+        std::shared_ptr<LineBucket> bucket = patternLayout->createLayout(iconAtlas.patternPositions);
+        for (const auto& pair : patternLayout->layerPaintProperties) {
+            buckets.emplace(pair.first, bucket);
+        }
     }
 
     for (auto& symbolLayout : symbolLayouts) {
@@ -483,7 +525,7 @@ void GeometryTileWorker::performSymbolLayout() {
         std::move(buckets),
         std::move(featureIndex),
         std::move(glyphAtlasImage),
-        std::move(iconAtlasImage)
+        std::move(iconAtlas)
     }, correlationID);
 }
 

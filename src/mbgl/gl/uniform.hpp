@@ -103,7 +103,7 @@ public:
                    : false)... });
 #endif
 
-        return State { { uniformLocation(id, Us::name()) }... };
+        return State(uniformLocation(id, Us::name())...);
     }
 
     template <class Program>

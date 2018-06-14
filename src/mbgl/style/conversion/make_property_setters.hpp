@@ -113,7 +113,7 @@ inline auto makePaintPropertySetters() {
     result["line-blur-transition"] = &setTransition<LineLayer, &LineLayer::setLineBlurTransition>;
     result["line-dasharray"] = &setProperty<LineLayer, PropertyValue<std::vector<float>>, &LineLayer::setLineDasharray, false, false>;
     result["line-dasharray-transition"] = &setTransition<LineLayer, &LineLayer::setLineDasharrayTransition>;
-    result["line-pattern"] = &setProperty<LineLayer, PropertyValue<std::string>, &LineLayer::setLinePattern, false, false>;
+    result["line-pattern"] = &setProperty<LineLayer, PropertyValue<std::string>, &LineLayer::setLinePattern, true, false>;
     result["line-pattern-transition"] = &setTransition<LineLayer, &LineLayer::setLinePatternTransition>;
 
     result["icon-opacity"] = &setProperty<SymbolLayer, PropertyValue<float>, &SymbolLayer::setIconOpacity, true, false>;

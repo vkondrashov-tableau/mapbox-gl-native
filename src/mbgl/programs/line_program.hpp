@@ -8,7 +8,7 @@
 #include <mbgl/shaders/line_sdf.hpp>
 #include <mbgl/util/geometry.hpp>
 #include <mbgl/renderer/layers/render_line_layer.hpp>
-
+#include <mbgl/renderer/cross_faded_property_evaluator.hpp>
 #include <cmath>
 
 namespace mbgl {
@@ -106,12 +106,7 @@ class LinePatternProgram : public Program<
         uniforms::u_matrix,
         uniforms::u_ratio,
         uniforms::u_gl_units_to_pixels,
-        uniforms::u_pattern_tl_a,
-        uniforms::u_pattern_br_a,
-        uniforms::u_pattern_tl_b,
-        uniforms::u_pattern_br_b,
-        uniforms::u_pattern_size_a,
-        uniforms::u_pattern_size_b,
+        uniforms::u_scale,
         uniforms::u_texsize,
         uniforms::u_fade,
         uniforms::u_image>,
@@ -125,8 +120,8 @@ public:
                                        const TransformState&,
                                        const std::array<float, 2>& pixelsToGLUnits,
                                        Size atlasSize,
-                                       const ImagePosition& posA,
-                                       const ImagePosition& posB);
+                                       const Faded<std::string> pattern,
+                                       const float pixelRatio);
 };
 
 class LineSDFProgram : public Program<

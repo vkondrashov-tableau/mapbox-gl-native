@@ -19,6 +19,7 @@ namespace mbgl {
 class GeometryTile;
 class GeometryTileData;
 class SymbolLayout;
+class PatternLayout;
 
 namespace style {
 class Layer;
@@ -41,7 +42,7 @@ public:
     void setShowCollisionBoxes(bool showCollisionBoxes_, uint64_t correlationID_);
     
     void onGlyphsAvailable(GlyphMap glyphs);
-    void onImagesAvailable(ImageMap images, uint64_t imageCorrelationID);
+    void onImagesAvailable(ImageMap icons, ImageMap patterns, uint64_t imageCorrelationID);
 
 private:
     void coalesced();
@@ -85,11 +86,16 @@ private:
     optional<std::unique_ptr<const GeometryTileData>> data;
 
     bool symbolLayoutsNeedPreparation = false;
+    bool patternNeedsLayout = false;
+
     std::vector<std::unique_ptr<SymbolLayout>> symbolLayouts;
+    std::vector<std::unique_ptr<PatternLayout>> patternLayouts;
+
     GlyphDependencies pendingGlyphDependencies;
     ImageDependencies pendingImageDependencies;
     GlyphMap glyphMap;
     ImageMap imageMap;
+    ImageMap patternMap;
     
     bool showCollisionBoxes;
     bool firstLoad = true;

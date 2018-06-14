@@ -87,31 +87,23 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
                                   const TransformState& state,
                                   const std::array<float, 2>& pixelsToGLUnits,
                                   const Size atlasSize,
-                                  const ImagePosition& posA,
-                                  const ImagePosition& posB) {
-     std::array<float, 2> sizeA {{
-         tile.id.pixelsToTileUnits(posA.displaySize()[0] * properties.get<LinePattern>().fromScale, state.getIntegerZoom()),
-         posA.displaySize()[1]
-     }};
+                                  const Faded<std::string> pattern,
+                                  const float pixelRatio) {
+    
+    const auto linepattern = properties.get<LinePattern>();
+    const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "", "", 2.0f, 1.0f, 0.5f});
 
-     std::array<float, 2> sizeB {{
-         tile.id.pixelsToTileUnits(posB.displaySize()[0] * properties.get<LinePattern>().toScale, state.getIntegerZoom()),
-         posB.displaySize()[1]
-     }};
+    const auto tileRatio = 1 / tile.id.pixelsToTileUnits(1, state.getIntegerZoom());
 
     return makeValues<LinePatternProgram::UniformValues>(
         properties,
         tile,
         state,
         pixelsToGLUnits,
-        uniforms::u_pattern_tl_a::Value{ posA.tl() },
-        uniforms::u_pattern_br_a::Value{ posA.br() },
-        uniforms::u_pattern_tl_b::Value{ posB.tl() },
-        uniforms::u_pattern_br_b::Value{ posB.br() },
-        uniforms::u_pattern_size_a::Value{ sizeA },
-        uniforms::u_pattern_size_b::Value{ sizeB },
+        // TODO get real pixel ratio
+        uniforms::u_scale::Value{ {{ pixelRatio, tileRatio, pattern.fromScale, pattern.toScale}}  },
         uniforms::u_texsize::Value{ atlasSize },
-        uniforms::u_fade::Value{ properties.get<LinePattern>().t },
+        uniforms::u_fade::Value{ linePatternValue.t },
         uniforms::u_image::Value{ 0 }
     );
 }

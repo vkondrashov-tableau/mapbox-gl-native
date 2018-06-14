@@ -43,9 +43,10 @@ using ImagePositions = std::map<std::string, ImagePosition>;
 class ImageAtlas {
 public:
     PremultipliedImage image;
-    ImagePositions positions;
+    ImagePositions iconPositions;
+    ImagePositions patternPositions;
 };
 
-ImageAtlas makeImageAtlas(const ImageMap&);
+ImageAtlas makeImageAtlas(const ImageMap&, const ImageMap&);
 
 } // namespace mbgl

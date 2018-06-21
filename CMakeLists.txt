@@ -117,6 +117,20 @@ else()
     message(STATUS "Can't find ccache — consider installing ccache to improve recompilation performance")
 endif()
 
+# Determine if the STL has codecvt
+file(WRITE "${CMAKE_BINARY_DIR}/features/codecvt/main.cpp" "#include <codecvt>\nint main() {}")
+try_compile(STL_SUPPORTS_CODECVT
+    "${CMAKE_BINARY_DIR}/features/codecvt"
+    SOURCES "${CMAKE_BINARY_DIR}/features/codecvt/main.cpp"
+    CMAKE_FLAGS ""
+    CXX_STANDARD 14
+)
+add_library(codecvt INTERFACE)
+if (NOT STL_SUPPORTS_CODECVT)
+    target_include_directories(codecvt INTERFACE platform/default/codecvt)
+    target_add_mason_package(codecvt INTERFACE boost)
+endif()
+
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/platform/${MBGL_PLATFORM}/config.cmake)
     message(ERROR "Can't find config.cmake file for platform ${MBGL_PLATFORM}")
 endif()

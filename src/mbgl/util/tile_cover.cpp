@@ -4,6 +4,7 @@
 #include <mbgl/map/transform_state.hpp>
 #include <mbgl/util/tile_cover_impl.hpp>
 #include <mbgl/util/tile_coordinate.hpp>
+#include <mbgl/math/log2.hpp>
 
 #include <functional>
 #include <list>
@@ -130,7 +131,7 @@ std::vector<UnwrappedTileID> tileCover(const Point<double>& tl,
 } // namespace
 
 int32_t coveringZoomLevel(double zoom, style::SourceType type, uint16_t size) {
-    zoom += ::log2(util::tileSize / size);
+    zoom += util::log2(util::tileSize / size);
     if (type == style::SourceType::Raster || type == style::SourceType::Video) {
         return ::round(zoom);
     } else {

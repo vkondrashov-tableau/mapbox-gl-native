@@ -48,13 +48,16 @@ void MapRenderer::schedule(std::weak_ptr<Mailbox> scheduled) {
     android::UniqueEnv _env = android::AttachEnv();
     auto runnable = std::make_unique<MapRendererRunnable>(*_env, std::move(scheduled));
 
-    // Obtain ownership of the peer (gets transferred to the MapRenderer on the JVM for later GC)
+    // Get a reference to the runnable's java peer
     auto peer = runnable->peer();
 
     // Queue the event on the Java Peer
     static auto queueEvent = javaClass.GetMethod<void(
             jni::Object<MapRendererRunnable>)>(*_env, "queueEvent");
-    javaPeer->Call(*_env, queueEvent, *peer);
+    javaPeer->Call(*_env, queueEvent, peer);
+
+    // Release the java peer as it is now owned by the MapRenderer java GC root
+    runnable->releasePeer();
 
     // Release the c++ peer as it will be destroyed on GC of the Java Peer
     runnable.release();

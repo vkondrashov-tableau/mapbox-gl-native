@@ -37,8 +37,11 @@ public:
 
     void run(jni::JNIEnv&);
 
-    // Transfers ownership of the Peer object to the caller
-    jni::UniqueObject<MapRendererRunnable> peer();
+    // Get a reference to the Java Peer object
+    jni::Object<MapRendererRunnable> peer();
+
+    // Release Java peer
+    void releasePeer();
 
 private:
     jni::UniqueObject<MapRendererRunnable> javaPeer;

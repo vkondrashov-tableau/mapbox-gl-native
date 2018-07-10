@@ -9,7 +9,7 @@ MapRendererRunnable::MapRendererRunnable(jni::JNIEnv& env, std::weak_ptr<Mailbox
     : mailbox(std::move(mailbox_)) {
 
     // Create the Java peer and hold on to a global reference
-    // Not using a weak reference here as this might oerflow
+    // Not using a weak reference here as this might overflow
     // the weak reference table on some devices
     jni::UniqueLocalFrame frame = jni::PushLocalFrame(env, 5);
     static auto constructor = javaClass.GetConstructor<jlong>(env);
@@ -23,8 +23,12 @@ void MapRendererRunnable::run(jni::JNIEnv&) {
     Mailbox::maybeReceive(mailbox);
 }
 
-jni::UniqueObject<MapRendererRunnable> MapRendererRunnable::peer() {
-    return std::move(javaPeer);
+jni::Object<MapRendererRunnable> MapRendererRunnable::peer() {
+    return jni::Object<MapRendererRunnable>(*javaPeer);
+}
+
+void MapRendererRunnable::releasePeer() {
+    javaPeer.reset();
 }
 
 // Static methods //

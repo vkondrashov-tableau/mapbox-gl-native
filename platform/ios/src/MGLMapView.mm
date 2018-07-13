@@ -4089,7 +4089,7 @@ public:
             }
             else
             {
-                if ([annotation isKindOfClass:[MGLMultiPoint class]])
+                if ([annotation conformsToProtocol:[MGLShape self]])
                 {
                     if ( ! ((MGLShape *)annotation).enabled) {
                         return true;

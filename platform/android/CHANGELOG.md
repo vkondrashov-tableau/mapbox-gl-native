@@ -4,6 +4,7 @@ Mapbox welcomes participation and contributions from everyone.  If you'd like to
 
 ## master
   - Token string syntax (`"{token}"`) in `SymbolLayer` `textField` and `iconImage` property values is now correctly converted to the appropriate expression equivalent. ([#11659](https://github.com/mapbox/mapbox-gl-native/issues/11659))
+  - Added support for rendering `symbol-placement: line-center`. Added corresponding `SYMBOL_PLACEMENT_LINE_CENTER` property. ([#12337](https://github.com/mapbox/mapbox-gl-native/pull/12337))
 
 ## 6.3.0 - July 18, 2018
  - Harden map events creation [#12406](https://github.com/mapbox/mapbox-gl-native/pull/12406)
@@ -18,7 +19,7 @@ Mapbox welcomes participation and contributions from everyone.  If you'd like to
  - Add LatLngForScreenCoordinate to MapSnapshotter API, This allows to convert a LatLng value to the x,y position on the MapSnasphot image [#12221](https://github.com/mapbox/mapbox-gl-native/pull/12221)
  - Expose multiple getCameraFor equivalent methods to convert a geometry or a bounds to a camera position with taking in account padding, tilt and bearing [#12290](https://github.com/mapbox/mapbox-gl-native/pull/12290)
  - Avoid race condition when calling getMapAsync from a non-UI thread when running instrumentation tests [#12308](https://github.com/mapbox/mapbox-gl-native/pull/12308)
- 
+
 ## 6.2.1 -  June 27, 2018
  - Backport range alpha values from 0 to 1 with int color conversion [#12235](https://github.com/mapbox/mapbox-gl-native/pull/12235)
 

@@ -4089,7 +4089,7 @@ public:
             }
             else
             {
-                if ([annotation conformsToProtocol:[MGLShape self]])
+                if ([annotation isKindOfClass:[MGLShape self]])
                 {
                     if ( ! ((MGLShape *)annotation).enabled) {
                         return true;

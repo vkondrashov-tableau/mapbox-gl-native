@@ -124,9 +124,11 @@ try_compile(STL_SUPPORTS_CODECVT
     SOURCES "${CMAKE_BINARY_DIR}/features/codecvt/main.cpp"
     CMAKE_FLAGS ""
     CXX_STANDARD 14
+    OUTPUT_VARIABLE CODECVT_TEST_OUTPUT
 )
 if (NOT STL_SUPPORTS_CODECVT)
-    message("Adding codecvt polyfill library")
+    message("codecvt support not detected: ${CODECVT_TEST_OUTPUT}")
+    message("Adding codecvt polyfill")
     add_library(codecvt INTERFACE)
     target_include_directories(codecvt INTERFACE platform/default/codecvt)
     target_add_mason_package(codecvt INTERFACE boost)

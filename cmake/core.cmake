@@ -7,7 +7,10 @@ target_include_directories(mbgl-core
     PRIVATE src
 )
 
-target_link_libraries(mbgl-core PRIVATE codecvt)
+if (NOT STL_SUPPORTS_CODECVT)
+    message("Linking codecvt for target mbgl-core")
+    target_link_libraries(mbgl-core PRIVATE codecvt)
+endif()
 
 target_add_mason_package(mbgl-core PUBLIC geometry)
 target_add_mason_package(mbgl-core PUBLIC variant)

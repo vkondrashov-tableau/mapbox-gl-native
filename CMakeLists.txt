@@ -125,8 +125,9 @@ try_compile(STL_SUPPORTS_CODECVT
     CMAKE_FLAGS ""
     CXX_STANDARD 14
 )
-add_library(codecvt INTERFACE)
 if (NOT STL_SUPPORTS_CODECVT)
+    message("Adding codecvt polyfill library")
+    add_library(codecvt INTERFACE)
     target_include_directories(codecvt INTERFACE platform/default/codecvt)
     target_add_mason_package(codecvt INTERFACE boost)
 endif()

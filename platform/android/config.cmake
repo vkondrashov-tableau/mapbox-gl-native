@@ -114,8 +114,11 @@ macro(mbgl_filesource)
     target_add_mason_package(mbgl-filesource PUBLIC sqlite)
     target_add_mason_package(mbgl-filesource PUBLIC jni.hpp)
 
+    if (NOT STL_SUPPORTS_CODECVT)
+        target_link_libraries(mbgl-filesource PRIVATE codecvt)
+    endif()
+
     target_link_libraries(mbgl-filesource
-        PRIVATE codecvt
         PUBLIC -llog
         PUBLIC -landroid
         PUBLIC -lstdc++
@@ -302,8 +305,12 @@ add_library(mbgl-android STATIC
     platform/android/src/jni.cpp
 )
 
+if (NOT STL_SUPPORTS_CODECVT)
+    message("Linking codecvt for target mbgl-android")
+    target_link_libraries(mbgl-android PRIVATE codecvt)
+endif()
+
 target_link_libraries(mbgl-android
-    PUBLIC codecvt
     PUBLIC mbgl-filesource
     PUBLIC mbgl-core
 )
@@ -317,6 +324,12 @@ add_library(mapbox-gl SHARED
 target_link_libraries(mapbox-gl
     PRIVATE mbgl-android
 )
+
+
+if (NOT STL_SUPPORTS_CODECVT)
+    message("Linking codecvt for target mapbox-gl")
+    target_link_libraries(mapbox-gl PRIVATE codecvt)
+endif()
 
 ## Test library ##
 
@@ -336,6 +349,11 @@ macro(mbgl_platform_test)
     target_link_libraries(mbgl-test
         PRIVATE mbgl-android
     )
+
+    if (NOT STL_SUPPORTS_CODECVT)
+        message("Linking codecvt for target mbgl-test")
+        target_link_libraries(mbgl-test PRIVATE codecvt)
+    endif()
 endmacro()
 
 ## Custom layer example ##

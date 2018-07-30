@@ -1017,7 +1017,7 @@ bool QMapboxGL::setLayoutProperty(const QString& layer, const QString& property_
         return false;
     }
 
-    auto result = conversion::setLayoutProperty(*layer_, property_.toStdString(), value);
+    auto result = layer_->setLayoutProperty(property_.toStdString(), value);
     if (result) {
         qWarning() << "Error setting layout property" << property_ << "on layer" << layer << ":" << QString::fromStdString(result->message);
         return false;
@@ -1086,7 +1086,7 @@ bool QMapboxGL::setPaintProperty(const QString& layer, const QString& property_,
         return false;
     }
 
-    auto result = conversion::setPaintProperty(*layer_, property_.toStdString(), value);
+    auto result = layer_->setPaintProperty(property_.toStdString(), value);
     if (result) {
         qWarning() << "Error setting paint property" << property_ << "on layer" << layer << ":" << QString::fromStdString(result->message);
         return false;
@@ -1394,7 +1394,7 @@ void QMapboxGL::addCustomLayer(const QString &id,
          }
 
         void initialize() {
-            ptr->initialize(); 
+            ptr->initialize();
         }
 
         void render(const mbgl::style::CustomLayerRenderParameters& params) {

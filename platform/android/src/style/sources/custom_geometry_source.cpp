@@ -78,6 +78,19 @@ namespace android {
         peer.Call(*_env, cancelTile, (int)tileID.z, (int)tileID.x, (int)tileID.y);
     };
 
+    void CustomGeometrySource::requestProcessed(jni::jint z,
+                                             jni::jint x,
+                                             jni::jint y) {
+        android::UniqueEnv _env = android::AttachEnv();
+
+        static auto requestProcessed = javaClass.GetMethod<void (jni::jint, jni::jint, jni::jint)>(*_env, "requestProcessed");
+
+        assert(javaPeer);
+
+        auto peer = jni::Cast(*_env, *javaPeer, javaClass);
+        peer.Call(*_env, requestProcessed, z, x, y);
+    };
+
     void CustomGeometrySource::setTileData(jni::JNIEnv& env,
                                            jni::jint z,
                                            jni::jint x,
@@ -90,6 +103,8 @@ namespace android {
 
         // Update the core source
         source.as<mbgl::style::CustomGeometrySource>()->CustomGeometrySource::setTileData(CanonicalTileID(z, x, y), GeoJSON(geometry));
+
+        requestProcessed(z, x, y);
     }
 
     void CustomGeometrySource::invalidateTile(jni::JNIEnv&, jni::jint z, jni::jint x, jni::jint y) {

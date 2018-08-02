@@ -7,8 +7,8 @@ namespace mbgl {
 namespace shaders {
 
 const char* heatmap::name = "heatmap";
-const char* heatmap::vertexSource = source() + 10789;
-const char* heatmap::fragmentSource = source() + 13245;
+const char* heatmap::vertexSource = source() + 11038;
+const char* heatmap::fragmentSource = source() + 13494;
 
 } // namespace shaders
 } // namespace mbgl

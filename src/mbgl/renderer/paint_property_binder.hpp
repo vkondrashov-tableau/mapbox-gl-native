@@ -520,14 +520,25 @@ public:
         return result;
     }
 
+    template <class>
+    struct UniformDefines;
+
+    template <class... Us>
+    struct UniformDefines<TypeList<Us...>> {
+        static void appendDefines(std::vector<std::string>& defines) {
+            util::ignore({
+                (defines.push_back(std::string("#define HAS_UNIFORM_") + Us::name()), 0)...
+            });
+        }
+    };
 
     template <class EvaluatedProperties>
     static std::vector<std::string> defines(const EvaluatedProperties& currentProperties) {
         std::vector<std::string> result;
         util::ignore({
-            (result.push_back(currentProperties.template get<Ps>().isConstant()
-                ? std::string("#define HAS_UNIFORM_") + Ps::Uniform::name()
-                : std::string()), 0)...
+            (currentProperties.template get<Ps>().isConstant()
+                ? UniformDefines<typename Ps::Uniforms>::appendDefines(result)
+                : (void) 0, 0)...
         });
         return result;
     }

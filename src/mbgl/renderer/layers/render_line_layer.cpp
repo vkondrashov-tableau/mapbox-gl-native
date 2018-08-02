@@ -55,6 +55,8 @@ void RenderLineLayer::evaluate(const PropertyEvaluationParameters& parameters) {
     evaluated = RenderLinePaintProperties::PossiblyEvaluated(
         unevaluated.evaluate(parameters).concat(extra.evaluate(dashArrayParams)));
 
+    crossfade = parameters.getCrossfadeParameters();
+
     passes = (evaluated.get<style::LineOpacity>().constantOr(1.0) > 0
               && evaluated.get<style::LineColor>().constantOr(Color::black()).a > 0
               && evaluated.get<style::LineWidth>().constantOr(1.0) > 0)
@@ -82,7 +84,7 @@ void RenderLineLayer::render(PaintParameters& parameters, RenderSource*) {
 
             const auto& paintPropertyBinders = bucket.paintPropertyBinders.at(getID());
 
-            paintPropertyBinders.setConstantPatternPositions(patternPositionA, patternPositionB);
+            paintPropertyBinders.setPatternParameters(patternPositionA, patternPositionB, crossfade);
 
             const auto allUniformValues = programInstance.computeAllUniformValues(
                 std::move(uniformValues),
@@ -113,8 +115,9 @@ void RenderLineLayer::render(PaintParameters& parameters, RenderSource*) {
         };
         const auto linepattern = evaluated.get<LinePattern>();
         // TODO get real crossfade parameters
-        // need a placeholder value that will trigger line pattern program if the line-pattern value is non-constant
-        const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 0.5f, 1.0f, 1.0f});
+        // need a non-empty placeholder value that will result in the LinePattern program to be
+        // used if the line-pattern value is non-constant
+        const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 0.0f, 0.0f, 0.0f});
 
         if (!evaluated.get<LineDasharray>().from.empty()) {
             const LinePatternCap cap = bucket.layout.get<LineCap>() == LineCapType::Round
@@ -151,7 +154,7 @@ void RenderLineLayer::render(PaintParameters& parameters, RenderSource*) {
                      parameters.state,
                      parameters.pixelsToGLUnits,
                      texsize,
-                     linePatternValue,
+                     crossfade,
                      parameters.pixelRatio),
                      *posA,
                      *posB);

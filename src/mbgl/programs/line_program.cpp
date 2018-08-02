@@ -87,13 +87,9 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
                                   const TransformState& state,
                                   const std::array<float, 2>& pixelsToGLUnits,
                                   const Size atlasSize,
-                                  const Faded<std::string> pattern,
+                                  const CrossfadeParameters crossfade,
                                   const float pixelRatio) {
     
-    const auto linepattern = properties.get<LinePattern>();
-    // TODO get real crossfade values
-    const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "", "", 1.0f, 2.0f, 1.0f});
-
     const auto tileRatio = 1 / tile.id.pixelsToTileUnits(1, state.getIntegerZoom());
 
     return makeValues<LinePatternProgram::UniformValues>(
@@ -101,9 +97,9 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
         tile,
         state,
         pixelsToGLUnits,
-        uniforms::u_scale::Value{ {{ pixelRatio, tileRatio, pattern.fromScale, pattern.toScale}}  },
+        uniforms::u_scale::Value{ {{ pixelRatio, tileRatio, crossfade.fromScale, crossfade.toScale}}  },
         uniforms::u_texsize::Value{ atlasSize },
-        uniforms::u_fade::Value{ linePatternValue.t },
+        uniforms::u_fade::Value{ crossfade.t },
         uniforms::u_image::Value{ 0 }
     );
 }

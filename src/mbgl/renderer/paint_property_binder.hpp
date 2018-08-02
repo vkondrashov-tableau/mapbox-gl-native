@@ -84,7 +84,7 @@ public:
 
     virtual void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, const ImagePositions&) = 0;
     virtual void upload(gl::Context& context) = 0;
-    virtual void setConstantPatternPositions(const optional<ImagePosition>&, const optional<ImagePosition>&) = 0;
+    virtual void setPatternParameters(const optional<ImagePosition>&, const optional<ImagePosition>&, CrossfadeParameters&) = 0;
     virtual std::tuple<ExpandToType<As, optional<gl::AttributeBinding>>...> attributeBinding(const PossiblyEvaluatedType& currentValue) const = 0;
     virtual std::tuple<ExpandToType<As, float>...> interpolationFactor(float currentZoom) const = 0;
     virtual std::tuple<ExpandToType<As, UniformValueType>...> uniformValue(const PossiblyEvaluatedType& currentValue) const = 0;
@@ -103,7 +103,7 @@ public:
 
     void populateVertexVector(const GeometryTileFeature&, std::size_t, const ImagePositions&) override {}
     void upload(gl::Context&) override {}
-    void setConstantPatternPositions(const optional<ImagePosition>&, const optional<ImagePosition>&) override {};
+    void setPatternParameters(const optional<ImagePosition>&, const optional<ImagePosition>&, CrossfadeParameters&) override {};
 
     std::tuple<optional<gl::AttributeBinding>> attributeBinding(const PossiblyEvaluatedPropertyValue<T>&) const override {
         return std::tuple<optional<gl::AttributeBinding>> {};
@@ -131,11 +131,11 @@ public:
     void populateVertexVector(const GeometryTileFeature&, std::size_t, const ImagePositions&) override {}
     void upload(gl::Context&) override {}
 
-    void setConstantPatternPositions(const optional<ImagePosition>& posA, const optional<ImagePosition>& posB) override {
+    void setPatternParameters(const optional<ImagePosition>& posA, const optional<ImagePosition>& posB, CrossfadeParameters&) override {
         if (!posA && !posB) {
             return;
         } else {
-            constantPatternPositions = std::tuple<std::array<uint16_t, 4>, std::array<uint16_t, 4>> { {{posB->tl()[0], posB->tl()[1], posB->br()[0], posB->br()[1]}}, {{posA->tl()[0], posA->tl()[1], posA->br()[0], posA->br()[1]}} };
+            constantPatternPositions = std::tuple<std::array<uint16_t, 4>, std::array<uint16_t, 4>> { posB->tlbr(), posA->tlbr() };
         }
     }
 
@@ -168,7 +168,7 @@ public:
         : expression(std::move(expression_)),
           defaultValue(std::move(defaultValue_)) {
     }
-    void setConstantPatternPositions(const optional<ImagePosition>&, const optional<ImagePosition>&) override {};
+    void setPatternParameters(const optional<ImagePosition>&, const optional<ImagePosition>&, CrossfadeParameters&) override {};
     void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, const ImagePositions&) override {
         auto evaluated = expression.evaluate(feature, defaultValue);
         this->statistics.add(evaluated);
@@ -223,7 +223,7 @@ public:
           defaultValue(std::move(defaultValue_)),
           zoomRange({zoom, zoom + 1}) {
     }
-    void setConstantPatternPositions(const optional<ImagePosition>&, const optional<ImagePosition>&) override {};
+    void setPatternParameters(const optional<ImagePosition>&, const optional<ImagePosition>&, CrossfadeParameters&) override {};
     void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, const ImagePositions&) override {
         Range<T> range = expression.evaluate(zoomRange, feature, defaultValue);
         this->statistics.add(range.min);
@@ -295,7 +295,9 @@ public:
           zoomRange({zoom, zoom + 1}) {
     }
 
-    void setConstantPatternPositions(const optional<ImagePosition>&, const optional<ImagePosition>&) override {};
+    void setPatternParameters(const optional<ImagePosition>&, const optional<ImagePosition>&, CrossfadeParameters& crossfade_) override {
+        crossfade = crossfade_;
+    };
 
     void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, const ImagePositions& patternPositions) override {
         std::array<T, 3> range;
@@ -318,14 +320,10 @@ public:
             const ImagePosition imageMid = mid->second;
             const ImagePosition imageMax = max->second;
 
-            const BaseAttributeValue patternTo = {{ imageMid.tl()[0], imageMid.tl()[1], imageMid.br()[0], imageMid.br()[1] }};
-            const BaseAttributeValue2 patternFromZoomIn = {{ imageMin.tl()[0], imageMin.tl()[1], imageMin.br()[0], imageMin.br()[1] }};
-            const BaseAttributeValue2 patternFromZoomOut = {{ imageMax.tl()[0], imageMax.tl()[1], imageMax.br()[0], imageMax.br()[1] }};
-
             for (std::size_t i = zoomInVertexVector.vertexSize(); i < length; ++i) {
-                patternToVertexVector.emplace_back(Vertex { patternTo });
-                zoomInVertexVector.emplace_back(Vertex2 { patternFromZoomIn });
-                zoomOutVertexVector.emplace_back(Vertex2 { patternFromZoomOut });
+                patternToVertexVector.emplace_back(Vertex { imageMid.tlbr() });
+                zoomInVertexVector.emplace_back(Vertex2 { imageMin.tlbr() });
+                zoomOutVertexVector.emplace_back(Vertex2 { imageMax.tlbr() });
             }
         }
     }
@@ -340,7 +338,11 @@ public:
         if (currentValue.isConstant()) {
             return {};
         } else {
-            return std::tuple<optional<gl::AttributeBinding>, optional<gl::AttributeBinding>> { AttributeType::binding(*patternToVertexBuffer, 0, BaseAttribute::Dimensions), AttributeType2::binding(*zoomInVertexBuffer, 0, BaseAttribute2::Dimensions) };
+            return std::tuple<optional<gl::AttributeBinding>, optional<gl::AttributeBinding>> {
+                AttributeType::binding(*patternToVertexBuffer, 0, BaseAttribute::Dimensions),
+                AttributeType2::binding(
+                    crossfade.fromScale == 2 ? *zoomInVertexBuffer : *zoomOutVertexBuffer,
+                    0, BaseAttribute2::Dimensions) };
         }
     }
 
@@ -363,6 +365,7 @@ private:
     optional<gl::VertexBuffer<Vertex>> patternToVertexBuffer;
     optional<gl::VertexBuffer<Vertex2>> zoomInVertexBuffer;
     optional<gl::VertexBuffer<Vertex2>> zoomOutVertexBuffer;
+    CrossfadeParameters crossfade;
 };
 
 template <class T, class PossiblyEvaluatedType>
@@ -461,9 +464,9 @@ public:
         });
     }
 
-    void setConstantPatternPositions(const optional<ImagePosition>& posA, const optional<ImagePosition>& posB) const {
+    void setPatternParameters(const optional<ImagePosition>& posA, const optional<ImagePosition>& posB, CrossfadeParameters& crossfade) const {
         util::ignore({
-            (binders.template get<Ps>()->setConstantPatternPositions(posA, posB), 0)...
+            (binders.template get<Ps>()->setPatternParameters(posA, posB, crossfade), 0)...
         });
     }
 

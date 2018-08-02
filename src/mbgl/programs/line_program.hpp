@@ -120,7 +120,7 @@ public:
                                        const TransformState&,
                                        const std::array<float, 2>& pixelsToGLUnits,
                                        Size atlasSize,
-                                       const Faded<std::string> pattern,
+                                       const CrossfadeParameters crossfade,
                                        const float pixelRatio);
 };
 

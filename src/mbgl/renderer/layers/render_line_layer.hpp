@@ -51,6 +51,7 @@ public:
 
 private:
     float getLineWidth(const GeometryTileFeature&, const float) const;
+    CrossfadeParameters crossfade;
 };
 
 template <>

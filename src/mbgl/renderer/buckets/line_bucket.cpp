@@ -15,7 +15,7 @@ LineBucket::LineBucket(const style::LineLayoutProperties::PossiblyEvaluated layo
                        std::map<std::string, RenderLinePaintProperties::PossiblyEvaluated> layerPaintProperties,
                        const float zoom_,
                        const uint32_t overscaling_)
-    : Bucket(LayerType::Line)
+    : Bucket(LayerType::Line),
       layout(layout_),
       zoom(zoom_),
       overscaling(overscaling_) {

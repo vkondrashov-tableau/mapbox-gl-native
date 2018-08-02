@@ -460,7 +460,6 @@ void GeometryTileWorker::performSymbolLayout() {
     
     MBGL_TIMING_START(watch)
     optional<AlphaImage> glyphAtlasImage;
-    optional<PremultipliedImage> iconAtlasImage;
     ImageAtlas iconAtlas;
 
     if (symbolLayoutsNeedPreparation) {

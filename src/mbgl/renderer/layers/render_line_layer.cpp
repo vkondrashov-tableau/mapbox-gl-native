@@ -112,8 +112,9 @@ void RenderLineLayer::render(PaintParameters& parameters, RenderSource*) {
             );
         };
         const auto linepattern = evaluated.get<LinePattern>();
-        // need a placeholder value that will trigget line pattern program if the line-pattern value is non-constant
-        const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 2.0f, 1.0f, 0.5f});
+        // TODO get real crossfade parameters
+        // need a placeholder value that will trigger line pattern program if the line-pattern value is non-constant
+        const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 0.5f, 1.0f, 1.0f});
 
         if (!evaluated.get<LineDasharray>().from.empty()) {
             const LinePatternCap cap = bucket.layout.get<LineCap>() == LineCapType::Round

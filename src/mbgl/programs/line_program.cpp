@@ -91,7 +91,8 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
                                   const float pixelRatio) {
     
     const auto linepattern = properties.get<LinePattern>();
-    const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "", "", 2.0f, 1.0f, 0.5f});
+    // TODO get real crossfade values
+    const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "", "", 1.0f, 2.0f, 1.0f});
 
     const auto tileRatio = 1 / tile.id.pixelsToTileUnits(1, state.getIntegerZoom());
 
@@ -100,7 +101,6 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
         tile,
         state,
         pixelsToGLUnits,
-        // TODO get real pixel ratio
         uniforms::u_scale::Value{ {{ pixelRatio, tileRatio, pattern.fromScale, pattern.toScale}}  },
         uniforms::u_texsize::Value{ atlasSize },
         uniforms::u_fade::Value{ linePatternValue.t },

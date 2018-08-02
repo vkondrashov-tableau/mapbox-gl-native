@@ -249,7 +249,7 @@ public:
     }
 
     std::tuple<float> interpolationFactor(float currentZoom) const override {
-        if (function.useIntegerZoom) {
+        if (expression.useIntegerZoom) {
             return std::tuple<float> { expression.interpolationFactor(zoomRange, std::floor(currentZoom)) };
         } else {
             return std::tuple<float> { expression.interpolationFactor(zoomRange, currentZoom) };
@@ -354,7 +354,7 @@ public:
     }
 
 private:
-    variant<style::CompositeFunction<T>, style::SourceFunction<T>> function;
+    style::PropertyExpression<T> expression;
     T defaultValue;
     Range<float> zoomRange;
     gl::VertexVector<Vertex> patternToVertexVector;
@@ -373,7 +373,7 @@ struct CreateBinder {
             [&] (const T& constant) -> std::unique_ptr<PaintPropertyBinder<T, T, PossiblyEvaluatedType, A>> {
                 return std::make_unique<ConstantPaintPropertyBinder<T, A>>(constant);
             },
-            [&] (const style::PropertyExpression<T>& expression) -> std::unique_ptr<PaintPropertyBinder<T, A>>  {
+            [&] (const style::PropertyExpression<T>& expression) -> std::unique_ptr<PaintPropertyBinder<T, T, PossiblyEvaluatedType, A>>  {
                 if (expression.isZoomConstant()) {
                     return std::make_unique<SourceFunctionPaintPropertyBinder<T, A>>(expression, defaultValue);
                 } else {
@@ -392,10 +392,7 @@ struct CreateBinder<T, PossiblyEvaluatedPropertyValue<Faded<T>>> {
             [&] (const Faded<T>& constant) -> std::unique_ptr<PaintPropertyBinder<T, std::array<uint16_t, 4>, PossiblyEvaluatedPropertyValue<Faded<T>>, A1, A2>> {
                 return std::make_unique<ConstantCrossFadedPaintPropertyBinder<T, A1, A2>>(constant);
             },
-            [&] (const style::SourceFunction<T>& function) {
-                return std::make_unique<CompositeCrossFadedPaintPropertyBinder<T, A1, A2>>(expression, zoom, defaultValue);
-            },
-            [&] (const style::CompositeFunction<T>& function) {
+            [&] (const style::PropertyExpression<T>& expression) -> std::unique_ptr<PaintPropertyBinder<T, std::array<uint16_t, 4>, PossiblyEvaluatedPropertyValue<Faded<T>>, A1, A2>>  {
                 return std::make_unique<CompositeCrossFadedPaintPropertyBinder<T, A1, A2>>(expression, zoom, defaultValue);
             }
         );
@@ -522,6 +519,7 @@ public:
         });
         return result;
     }
+
 
     template <class EvaluatedProperties>
     static std::vector<std::string> defines(const EvaluatedProperties& currentProperties) {

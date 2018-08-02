@@ -117,7 +117,6 @@ private:
     std::shared_ptr<FeatureIndex> latestFeatureIndex;
 
     optional<AlphaImage> glyphAtlasImage;
-    optional<PremultipliedImage> iconAtlasImage;
     ImageAtlas iconAtlas;
 
     const MapMode mode;

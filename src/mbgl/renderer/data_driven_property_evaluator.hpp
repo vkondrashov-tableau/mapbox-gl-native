@@ -58,14 +58,13 @@ public:
         return ResultType(calculate(defaultValue, defaultValue, defaultValue));
     }
 
-    ResultType operator()(const style::CameraFunction<T>& function) const {
-        const T evaluated = parameters.useIntegerZoom ? function.evaluate(floor(parameters.z)) : function.evaluate(parameters.z);
-        return ResultType(calculate(evaluated, evaluated, evaluated));
-    }
-
-    template <class Function>
-    ResultType operator()(const Function& function) const {
-        return ResultType(function);
+    ResultType operator()(const style::PropertyExpression<T>& expression) const {
+        if (!expression.isFeatureConstant()) {
+            return ResultType(expression);
+        } else {
+            const T evaluated = expression.evaluate(floor(parameters.z));
+            return ResultType(calculate(evaluated, evaluated, evaluated));
+        }
     }
 
 

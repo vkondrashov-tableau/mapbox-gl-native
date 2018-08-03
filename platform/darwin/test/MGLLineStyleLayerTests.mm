@@ -661,7 +661,7 @@
 
         NSExpression *constantExpression = [NSExpression expressionWithFormat:@"'Line Pattern'"];
         layer.linePattern = constantExpression;
-        mbgl::style::DataDrivenPropertyValue<std::string> propertyValue = { "Line Pattern" };
+        mbgl::style::PropertyValue<std::string> propertyValue = { "Line Pattern" };
         XCTAssertEqual(rawLayer->getLinePattern(), propertyValue,
                        @"Setting linePattern to a constant value expression should update line-pattern.");
         XCTAssertEqualObjects(layer.linePattern, constantExpression,

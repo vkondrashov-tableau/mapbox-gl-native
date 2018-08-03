@@ -109,9 +109,9 @@ public:
     void setLineDasharrayTransition(const TransitionOptions&);
     TransitionOptions getLineDasharrayTransition() const;
 
-    static DataDrivenPropertyValue<std::string> getDefaultLinePattern();
-    DataDrivenPropertyValue<std::string> getLinePattern() const;
-    void setLinePattern(DataDrivenPropertyValue<std::string>);
+    static PropertyValue<std::string> getDefaultLinePattern();
+    PropertyValue<std::string> getLinePattern() const;
+    void setLinePattern(PropertyValue<std::string>);
     void setLinePatternTransition(const TransitionOptions&);
     TransitionOptions getLinePatternTransition() const;
 

@@ -42,8 +42,8 @@ public:
 template <class T, class A1, class U1, class A2, class U2>
 class CrossFadedDataDrivenPaintProperty {
 public:
-    using TransitionableType = Transitionable<DataDrivenPropertyValue<T>>;
-    using UnevaluatedType = Transitioning<DataDrivenPropertyValue<T>>;
+    using TransitionableType = Transitionable<PropertyValue<T>>;
+    using UnevaluatedType = Transitioning<PropertyValue<T>>;
     using EvaluatorType = DataDrivenPropertyEvaluator<Faded<T>>;
     using PossiblyEvaluatedType = PossiblyEvaluatedPropertyValue<Faded<T>>;
     using Type = T;

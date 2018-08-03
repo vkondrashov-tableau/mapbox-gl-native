@@ -404,15 +404,15 @@ TransitionOptions LineLayer::getLineDasharrayTransition() const {
     return impl().paint.template get<LineDasharray>().options;
 }
 
-DataDrivenPropertyValue<std::string> LineLayer::getDefaultLinePattern() {
+PropertyValue<std::string> LineLayer::getDefaultLinePattern() {
     return { "" };
 }
 
-DataDrivenPropertyValue<std::string> LineLayer::getLinePattern() const {
+PropertyValue<std::string> LineLayer::getLinePattern() const {
     return impl().paint.template get<LinePattern>().value;
 }
 
-void LineLayer::setLinePattern(DataDrivenPropertyValue<std::string> value) {
+void LineLayer::setLinePattern(PropertyValue<std::string> value) {
     if (value == getLinePattern())
         return;
     auto impl_ = mutableImpl();

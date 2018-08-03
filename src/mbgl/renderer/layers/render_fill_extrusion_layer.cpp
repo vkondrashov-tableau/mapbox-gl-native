@@ -168,9 +168,9 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
 
         const auto allUniformValues = programInstance.computeAllUniformValues(
             ExtrusionTextureProgram::UniformValues{
-                uniforms::u_matrix::Value{ viewportMat }, uniforms::u_world::Value{ size },
-                uniforms::u_image::Value{ 0 },
-                uniforms::u_opacity::Value{ evaluated.get<FillExtrusionOpacity>() }
+                uniforms::u_matrix::Value( viewportMat ), uniforms::u_world::Value( size ),
+                uniforms::u_image::Value( 0 ),
+                uniforms::u_opacity::Value( evaluated.get<FillExtrusionOpacity>() )
             },
             paintAttributeData,
             properties,

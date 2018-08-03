@@ -108,9 +108,9 @@ void RenderBackgroundLayer::render(PaintParameters& parameters, RenderSource*) {
             draw(
                 parameters.programs.background,
                 BackgroundProgram::UniformValues {
-                    uniforms::u_matrix::Value{ parameters.matrixForTile(tileID) },
-                    uniforms::u_color::Value{ evaluated.get<BackgroundColor>() },
-                    uniforms::u_opacity::Value{ evaluated.get<BackgroundOpacity>() },
+                    uniforms::u_matrix::Value( parameters.matrixForTile(tileID) ),
+                    uniforms::u_color::Value( evaluated.get<BackgroundColor>() ),
+                    uniforms::u_opacity::Value( evaluated.get<BackgroundOpacity>() ),
                 }
             );
         }

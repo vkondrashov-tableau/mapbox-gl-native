@@ -168,8 +168,8 @@ void GeometryTile::getImages(ImageRequestPair pair) {
     imageManager.getImages(*this, std::move(pair));
 }
 
-const optional<ImagePosition> GeometryTile::getPattern(const std::string& id) {
-    auto it = iconAtlas.patternPositions.find(id);
+const optional<ImagePosition> GeometryTile::getPattern(const std::string& pattern) {
+    auto it = iconAtlas.patternPositions.find(pattern);
     if (it !=  iconAtlas.patternPositions.end()) {
         return it->second;
     }

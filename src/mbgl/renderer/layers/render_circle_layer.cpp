@@ -68,19 +68,19 @@ void RenderCircleLayer::render(PaintParameters& parameters, RenderSource*) {
    
         const auto allUniformValues = programInstance.computeAllUniformValues(
             CircleProgram::UniformValues {
-                uniforms::u_matrix::Value{
+                uniforms::u_matrix::Value(
                     tile.translatedMatrix(evaluated.get<CircleTranslate>(),
                                           evaluated.get<CircleTranslateAnchor>(),
                                           parameters.state)
-                },
-                uniforms::u_scale_with_map::Value{ scaleWithMap },
-                uniforms::u_extrude_scale::Value{ pitchWithMap
+                ),
+                uniforms::u_scale_with_map::Value( scaleWithMap ),
+                uniforms::u_extrude_scale::Value( pitchWithMap
                     ? std::array<float, 2> {{
                         tile.id.pixelsToTileUnits(1, parameters.state.getZoom()),
                         tile.id.pixelsToTileUnits(1, parameters.state.getZoom()) }}
-                    : parameters.pixelsToGLUnits },
-                uniforms::u_camera_to_center_distance::Value{ parameters.state.getCameraToCenterDistance() },
-                uniforms::u_pitch_with_map::Value{ pitchWithMap }
+                    : parameters.pixelsToGLUnits ),
+                uniforms::u_camera_to_center_distance::Value( parameters.state.getCameraToCenterDistance() ),
+                uniforms::u_pitch_with_map::Value( pitchWithMap )
             },
             paintPropertyBinders,
             evaluated,

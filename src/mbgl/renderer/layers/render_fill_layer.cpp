@@ -78,12 +78,12 @@ void RenderFillLayer::render(PaintParameters& parameters, RenderSource*) {
 
                 const auto allUniformValues = programInstance.computeAllUniformValues(
                     FillProgram::UniformValues {
-                        uniforms::u_matrix::Value{
+                        uniforms::u_matrix::Value(
                             tile.translatedMatrix(evaluated.get<FillTranslate>(),
                                                   evaluated.get<FillTranslateAnchor>(),
                                                   parameters.state)
-                        },
-                        uniforms::u_world::Value{ parameters.context.viewport.getCurrentValue().size },
+                        ),
+                        uniforms::u_world::Value( parameters.context.viewport.getCurrentValue().size ),
                     },
                     paintPropertyBinders,
                     evaluated,

@@ -191,10 +191,10 @@ void GeometryTileWorker::symbolDependenciesChanged() {
     try {
         switch (state) {
         case Idle:
-            if (symbolLayoutsNeedPreparation || patternNeedsLayout) {
-                // symbolLayoutsNeedPreparation and patternNeedsLayout can only be set true by parsing
+            if (symbolLayoutsNeedPreparation) {
+                // symbolLayoutsNeedPreparation can only be set true by parsing
                 // and the parse result can only be cleared by performSymbolLayout
-                // which also clears symbolLayoutsNeedPreparation and patternNeedsLayout
+                // which also clears symbolLayoutsNeedPreparation
                 assert(hasPendingParseResult());
                 performSymbolLayout();
                 coalesce();
@@ -386,7 +386,7 @@ void GeometryTileWorker::parse() {
             auto layout = leader.as<RenderLineLayer>()->createLayout(
                 parameters, group, std::move(geometryLayer), imageDependencies);
             patternLayoutMap.emplace(leader.getID(), std::move(layout));
-            patternNeedsLayout = true;
+            symbolLayoutsNeedPreparation = true;
         } else {
             const Filter& filter = leader.baseImpl->filter;
             const std::string& sourceLayerID = leader.baseImpl->sourceLayer;
@@ -489,7 +489,7 @@ void GeometryTileWorker::performSymbolLayout() {
             return;
         }
 
-        std::shared_ptr<LineBucket> bucket = patternLayout->createLayout(iconAtlas.patternPositions);
+        std::shared_ptr<LineBucket> bucket = patternLayout->createBucket(iconAtlas.patternPositions, featureIndex);
         for (const auto& pair : patternLayout->layerPaintProperties) {
             buckets.emplace(pair.first, bucket);
         }

@@ -14,8 +14,11 @@ PatternLayout::PatternLayout(const BucketParameters& parameters,
                     zoom(parameters.tileID.overscaledZ),
                     overscaling(parameters.tileID.overscaleFactor()) {
 
-    const LineLayer::Impl& leader = layers.at(0)->as<RenderLineLayer>()->impl();
+    const RenderLineLayer* renderLayer = layers.at(0)->as<RenderLineLayer>();
+    const LineLayer::Impl& leader = renderLayer->impl();
     layout = leader.layout.evaluate(PropertyEvaluationParameters(zoom));
+    sourceLayerID = leader.sourceLayer;
+    groupID = renderLayer->getID();
 
     for (const auto& layer : layers) {
         const RenderLinePaintProperties::PossiblyEvaluated evaluatedProps = layer->as<RenderLineLayer>()->paintProperties();
@@ -34,16 +37,19 @@ PatternLayout::PatternLayout(const BucketParameters& parameters,
         auto feature = sourceLayer->getFeature(i);
         if (!leader.filter(expression::EvaluationContext { this->zoom, feature.get() }))
             continue;
-        features.push_back(std::move(feature));
+        features.push_back({i, std::move(feature)});
     }
 }
 
-std::unique_ptr<LineBucket> PatternLayout::createLayout(const ImagePositions& patternPositions) {
+std::unique_ptr<LineBucket> PatternLayout::createBucket(const ImagePositions& patternPositions, std::unique_ptr<FeatureIndex>& featureIndex) {
     auto bucket = std::make_unique<LineBucket>(layout, layerPaintProperties, zoom, overscaling);
-    for (auto & feature : features) {
+    for (auto & pair : features) {
+        std::unique_ptr<GeometryTileFeature> feature = std::move(pair.second);
+        const auto i = pair.first;
         GeometryCollection geometries = feature->getGeometries();
 
         bucket->addFeature(*feature, geometries, patternPositions);
+        featureIndex->insert(geometries, i, sourceLayerID, groupID);
     }
     return bucket;
 };

@@ -86,7 +86,6 @@ private:
     optional<std::unique_ptr<const GeometryTileData>> data;
 
     bool symbolLayoutsNeedPreparation = false;
-    bool patternNeedsLayout = false;
 
     std::vector<std::unique_ptr<SymbolLayout>> symbolLayouts;
     std::vector<std::unique_ptr<PatternLayout>> patternLayouts;

@@ -18,7 +18,7 @@ class FillBucket : public Bucket {
 public:
     FillBucket(const BucketParameters&, const std::vector<const RenderLayer*>&);
 
-    virtual void addFeature(const GeometryTileFeature&,
+    void addFeature(const GeometryTileFeature&,
                             const GeometryCollection&,
                             const mbgl::ImagePositions&) override;
     bool hasData() const override;

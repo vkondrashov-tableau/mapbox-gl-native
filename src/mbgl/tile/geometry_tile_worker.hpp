@@ -19,7 +19,12 @@ namespace mbgl {
 class GeometryTile;
 class GeometryTileData;
 class SymbolLayout;
+
+template <class B, class L>
 class PatternLayout;
+
+class RenderLineLayer;
+class LineBucket;
 
 namespace style {
 class Layer;
@@ -88,7 +93,7 @@ private:
     bool symbolLayoutsNeedPreparation = false;
 
     std::vector<std::unique_ptr<SymbolLayout>> symbolLayouts;
-    std::vector<std::unique_ptr<PatternLayout>> patternLayouts;
+    std::vector<std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>>> patternLayouts;
 
     GlyphDependencies pendingGlyphDependencies;
     ImageDependencies pendingImageDependencies;

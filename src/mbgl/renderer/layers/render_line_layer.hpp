@@ -5,10 +5,9 @@
 #include <mbgl/style/layers/line_layer_properties.hpp>
 #include <mbgl/programs/uniforms.hpp>
 #include <mbgl/style/image_impl.hpp>
+#include <mbgl/layout/pattern_layout.hpp>
 
 namespace mbgl {
-
-class PatternLayout;
 
 struct LineFloorwidth : style::DataDrivenPaintProperty<float, attributes::a_floorwidth, uniforms::u_floorwidth> {
     static float defaultValue() { return 1; }
@@ -17,6 +16,8 @@ struct LineFloorwidth : style::DataDrivenPaintProperty<float, attributes::a_floo
 class RenderLinePaintProperties : public style::ConcatenateProperties<
     style::LinePaintProperties,
     style::Properties<LineFloorwidth>> {};
+
+class LineBucket;
 
 class RenderLineLayer: public RenderLayer {
 public:
@@ -39,7 +40,7 @@ public:
             const mat4&) const override;
 
     std::unique_ptr<Bucket> createBucket(const BucketParameters&, const std::vector<const RenderLayer*>&) const override;
-    std::unique_ptr<PatternLayout> createLayout(const BucketParameters&,
+    std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>> createLayout(const BucketParameters&,
                                                const std::vector<const RenderLayer*>&,
                                                std::unique_ptr<GeometryTileLayer>,
                                                ImageDependencies&) const;
@@ -47,6 +48,8 @@ public:
     style::LinePaintProperties::Unevaluated unevaluated;
     RenderLinePaintProperties::PossiblyEvaluated evaluated;
 
+    using StyleLayerImpl = style::LineLayer::Impl;
+    using PatternProperty = style::LinePattern;
     const style::LineLayer::Impl& impl() const;
 
 private:

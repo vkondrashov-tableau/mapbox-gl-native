@@ -12,7 +12,6 @@
 #include <mbgl/util/math.hpp>
 #include <mbgl/util/intersection_tests.hpp>
 #include <mbgl/tile/geometry_tile.hpp>
-#include <mbgl/layout/pattern_layout.hpp>
 
 namespace mbgl {
 
@@ -32,11 +31,11 @@ std::unique_ptr<Bucket> RenderLineLayer::createBucket(const BucketParameters&, c
     return nullptr;
 }
 
-std::unique_ptr<PatternLayout> RenderLineLayer::createLayout(const BucketParameters& parameters,
+std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>> RenderLineLayer::createLayout(const BucketParameters& parameters,
                                                               const std::vector<const RenderLayer*>& group,
                                                               std::unique_ptr<GeometryTileLayer> layer,
                                                               ImageDependencies& imageDependencies) const {
-    return std::make_unique<PatternLayout>(parameters,
+    return std::make_unique<PatternLayout<LineBucket, RenderLineLayer>>(parameters,
                                           group,
                                           std::move(layer),
                                           imageDependencies);

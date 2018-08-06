@@ -1,5 +1,4 @@
 #pragma once
-
 #include <mbgl/renderer/bucket.hpp>
 #include <mbgl/tile/geometry_tile_data.hpp>
 #include <mbgl/gl/vertex_buffer.hpp>
@@ -43,6 +42,10 @@ public:
     optional<gl::IndexBuffer<gl::Triangles>> indexBuffer;
 
     std::map<std::string, LineProgram::PaintPropertyBinders> paintPropertyBinders;
+
+    using RenderLayerType = RenderLineLayer;
+    using PossiblyEvaluatedPaintProperties = RenderLinePaintProperties::PossiblyEvaluated;
+    using PossiblyEvaluatedLayoutProperties = style::LineLayoutProperties::PossiblyEvaluated;
 
 private:
     void addGeometry(const GeometryCoordinates&, const GeometryTileFeature&);

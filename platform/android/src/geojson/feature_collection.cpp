@@ -28,7 +28,7 @@ mbgl::FeatureCollection FeatureCollection::convert(jni::JNIEnv& env, jni::Object
 }
 
 jni::Object<java::util::List> FeatureCollection::features(jni::JNIEnv& env, jni::Object<FeatureCollection> jCollection) {
-    static auto method = FeatureCollection::javaClass.GetMethod<jni::Object<java::util::List> ()>(env, "features");
+    auto method = FeatureCollection::javaClass.GetMethod<jni::Object<java::util::List> ()>(env, "features");
     return jCollection.Call(env, method);
 }
 

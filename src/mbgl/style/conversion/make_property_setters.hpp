@@ -92,7 +92,7 @@ inline auto makePaintPropertySetters() {
     result["fill-translate-transition"] = &setTransition<FillLayer, &FillLayer::setFillTranslateTransition>;
     result["fill-translate-anchor"] = &setProperty<FillLayer, PropertyValue<TranslateAnchorType>, &FillLayer::setFillTranslateAnchor, false, false>;
     result["fill-translate-anchor-transition"] = &setTransition<FillLayer, &FillLayer::setFillTranslateAnchorTransition>;
-    result["fill-pattern"] = &setProperty<FillLayer, PropertyValue<std::string>, &FillLayer::setFillPattern, false, false>;
+    result["fill-pattern"] = &setProperty<FillLayer, PropertyValue<std::string>, &FillLayer::setFillPattern, true, false>;
     result["fill-pattern-transition"] = &setTransition<FillLayer, &FillLayer::setFillPatternTransition>;
 
     result["line-opacity"] = &setProperty<LineLayer, PropertyValue<float>, &LineLayer::setLineOpacity, true, false>;
@@ -187,7 +187,7 @@ inline auto makePaintPropertySetters() {
     result["fill-extrusion-translate-transition"] = &setTransition<FillExtrusionLayer, &FillExtrusionLayer::setFillExtrusionTranslateTransition>;
     result["fill-extrusion-translate-anchor"] = &setProperty<FillExtrusionLayer, PropertyValue<TranslateAnchorType>, &FillExtrusionLayer::setFillExtrusionTranslateAnchor, false, false>;
     result["fill-extrusion-translate-anchor-transition"] = &setTransition<FillExtrusionLayer, &FillExtrusionLayer::setFillExtrusionTranslateAnchorTransition>;
-    result["fill-extrusion-pattern"] = &setProperty<FillExtrusionLayer, PropertyValue<std::string>, &FillExtrusionLayer::setFillExtrusionPattern, false, false>;
+    result["fill-extrusion-pattern"] = &setProperty<FillExtrusionLayer, PropertyValue<std::string>, &FillExtrusionLayer::setFillExtrusionPattern, true, false>;
     result["fill-extrusion-pattern-transition"] = &setTransition<FillExtrusionLayer, &FillExtrusionLayer::setFillExtrusionPatternTransition>;
     result["fill-extrusion-height"] = &setProperty<FillExtrusionLayer, PropertyValue<float>, &FillExtrusionLayer::setFillExtrusionHeight, true, false>;
     result["fill-extrusion-height-transition"] = &setTransition<FillExtrusionLayer, &FillExtrusionLayer::setFillExtrusionHeightTransition>;

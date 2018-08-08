@@ -31,14 +31,12 @@ std::unique_ptr<Bucket> RenderLineLayer::createBucket(const BucketParameters&, c
     return nullptr;
 }
 
-std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>> RenderLineLayer::createLayout(const BucketParameters& parameters,
-                                                              const std::vector<const RenderLayer*>& group,
-                                                              std::unique_ptr<GeometryTileLayer> layer,
-                                                              ImageDependencies& imageDependencies) const {
-    return std::make_unique<PatternLayout<LineBucket, RenderLineLayer>>(parameters,
-                                          group,
-                                          std::move(layer),
-                                          imageDependencies);
+std::unique_ptr<PatternLayout<LineBucket>>
+RenderLineLayer::createLayout(const BucketParameters& parameters,
+                              const std::vector<const RenderLayer*>& group,
+                              std::unique_ptr<GeometryTileLayer> layer,
+                              ImageDependencies& imageDependencies) const {
+    return std::make_unique<PatternLayout<LineBucket>>(parameters, group, std::move(layer), imageDependencies);
 }
 
 void RenderLineLayer::transition(const TransitionParameters& parameters) {
@@ -113,11 +111,10 @@ void RenderLineLayer::render(PaintParameters& parameters, RenderSource*) {
             );
         };
         const auto linepattern = evaluated.get<LinePattern>();
-        // TODO get real crossfade parameters
+
         // need a non-empty placeholder value that will result in the LinePattern program to be
         // used if the line-pattern value is non-constant
         const auto linePatternValue = linepattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 0.0f, 0.0f, 0.0f});
-
         if (!evaluated.get<LineDasharray>().from.empty()) {
             const LinePatternCap cap = bucket.layout.get<LineCap>() == LineCapType::Round
                 ? LinePatternCap::Round : LinePatternCap::Square;

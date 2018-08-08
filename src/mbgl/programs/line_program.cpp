@@ -87,7 +87,7 @@ LinePatternProgram::uniformValues(const RenderLinePaintProperties::PossiblyEvalu
                                   const TransformState& state,
                                   const std::array<float, 2>& pixelsToGLUnits,
                                   const Size atlasSize,
-                                  const CrossfadeParameters crossfade,
+                                  const CrossfadeParameters& crossfade,
                                   const float pixelRatio) {
     
     const auto tileRatio = 1 / tile.id.pixelsToTileUnits(1, state.getIntegerZoom());

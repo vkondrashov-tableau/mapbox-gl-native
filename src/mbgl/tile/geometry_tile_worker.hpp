@@ -10,6 +10,9 @@
 #include <mbgl/style/layer_impl.hpp>
 #include <mbgl/geometry/feature_index.hpp>
 #include <mbgl/renderer/bucket.hpp>
+#include <mbgl/renderer/buckets/fill_bucket.hpp>
+#include <mbgl/renderer/buckets/fill_extrusion_bucket.hpp>
+#include <mbgl/renderer/buckets/line_bucket.hpp>
 
 #include <atomic>
 #include <memory>
@@ -20,11 +23,8 @@ class GeometryTile;
 class GeometryTileData;
 class SymbolLayout;
 
-template <class B, class L>
+template <class B>
 class PatternLayout;
-
-class RenderLineLayer;
-class LineBucket;
 
 namespace style {
 class Layer;
@@ -91,9 +91,15 @@ private:
     optional<std::unique_ptr<const GeometryTileData>> data;
 
     bool symbolLayoutsNeedPreparation = false;
+    bool patternNeedsLayout = false;
 
     std::vector<std::unique_ptr<SymbolLayout>> symbolLayouts;
-    std::vector<std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>>> patternLayouts;
+
+    using LinePatternLayout = PatternLayout<LineBucket>;
+    using FillPatternLayout = PatternLayout<FillBucket>;
+    using FillExtrusionPatternLayout = PatternLayout<FillExtrusionBucket>;
+
+    std::vector<variant<std::unique_ptr<LinePatternLayout>, std::unique_ptr<FillPatternLayout>, std::unique_ptr<FillExtrusionPatternLayout>>> patternLayouts;
 
     GlyphDependencies pendingGlyphDependencies;
     ImageDependencies pendingImageDependencies;

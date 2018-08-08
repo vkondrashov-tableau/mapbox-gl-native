@@ -17,8 +17,14 @@ class RenderLineLayer;
 
 class LineBucket : public Bucket {
 public:
-    LineBucket(const style::LineLayoutProperties::PossiblyEvaluated layout,
-               std::map<std::string, RenderLinePaintProperties::PossiblyEvaluated> layerPaintProperties,
+
+    // These aliases are used by the PatternLayout template
+    using RenderLayerType = RenderLineLayer;
+    using PossiblyEvaluatedPaintProperties = RenderLinePaintProperties::PossiblyEvaluated;
+    using PossiblyEvaluatedLayoutProperties = style::LineLayoutProperties::PossiblyEvaluated;
+
+    LineBucket(const PossiblyEvaluatedLayoutProperties layout,
+               std::map<std::string, PossiblyEvaluatedPaintProperties> layerPaintProperties,
                const float zoom,
                const uint32_t overscaling);
 
@@ -32,7 +38,7 @@ public:
 
     float getQueryRadius(const RenderLayer&) const override;
 
-    style::LineLayoutProperties::PossiblyEvaluated layout;
+    PossiblyEvaluatedLayoutProperties layout;
 
     gl::VertexVector<LineLayoutVertex> vertices;
     gl::IndexVector<gl::Triangles> triangles;
@@ -42,10 +48,6 @@ public:
     optional<gl::IndexBuffer<gl::Triangles>> indexBuffer;
 
     std::map<std::string, LineProgram::PaintPropertyBinders> paintPropertyBinders;
-
-    using RenderLayerType = RenderLineLayer;
-    using PossiblyEvaluatedPaintProperties = RenderLinePaintProperties::PossiblyEvaluated;
-    using PossiblyEvaluatedLayoutProperties = style::LineLayoutProperties::PossiblyEvaluated;
 
 private:
     void addGeometry(const GeometryCoordinates&, const GeometryTileFeature&);

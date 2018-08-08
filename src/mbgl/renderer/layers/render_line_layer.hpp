@@ -21,6 +21,9 @@ class LineBucket;
 
 class RenderLineLayer: public RenderLayer {
 public:
+    using StyleLayerImpl = style::LineLayer::Impl;
+    using PatternProperty = style::LinePattern;
+
     RenderLineLayer(Immutable<style::LineLayer::Impl>);
     ~RenderLineLayer() final = default;
 
@@ -40,7 +43,7 @@ public:
             const mat4&) const override;
 
     std::unique_ptr<Bucket> createBucket(const BucketParameters&, const std::vector<const RenderLayer*>&) const override;
-    std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>> createLayout(const BucketParameters&,
+    std::unique_ptr<PatternLayout<LineBucket>> createLayout(const BucketParameters&,
                                                const std::vector<const RenderLayer*>&,
                                                std::unique_ptr<GeometryTileLayer>,
                                                ImageDependencies&) const;
@@ -48,8 +51,7 @@ public:
     style::LinePaintProperties::Unevaluated unevaluated;
     RenderLinePaintProperties::PossiblyEvaluated evaluated;
 
-    using StyleLayerImpl = style::LineLayer::Impl;
-    using PatternProperty = style::LinePattern;
+
     const style::LineLayer::Impl& impl() const;
 
 private:

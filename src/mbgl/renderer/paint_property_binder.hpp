@@ -10,6 +10,7 @@
 #include <mbgl/renderer/cross_faded_property_evaluator.hpp>
 #include <mbgl/util/variant.hpp>
 #include <mbgl/renderer/image_atlas.hpp>
+#include <mbgl/util/indexed_tuple.hpp>
 
 #include <bitset>
 
@@ -139,8 +140,9 @@ public:
         }
     }
 
-    std::tuple<optional<gl::AttributeBinding>, optional<gl::AttributeBinding>> attributeBinding(const PossiblyEvaluatedPropertyValue<Faded<T>>&) const override {
-        return std::tuple<ExpandToType<As, optional<gl::AttributeBinding>>...> {};
+    std::tuple<optional<gl::AttributeBinding>, optional<gl::AttributeBinding>>
+    attributeBinding(const PossiblyEvaluatedPropertyValue<Faded<T>>&) const override {
+        return std::tuple<optional<gl::AttributeBinding>, optional<gl::AttributeBinding>> {};
     }
 
     std::tuple<float, float> interpolationFactor(float) const override {

@@ -27,21 +27,25 @@ using namespace style;
 
 struct GeometryTooLongException : std::exception {};
 
-FillBucket::FillBucket(const BucketParameters& parameters, const std::vector<const RenderLayer*>& layers)
+FillBucket::FillBucket(const FillBucket::PossiblyEvaluatedLayoutProperties,
+                       std::map<std::string, FillBucket::PossiblyEvaluatedPaintProperties> layerPaintProperties,
+                       const float zoom,
+                       const uint32_t)
     : Bucket(LayerType::Fill) {
-    for (const auto& layer : layers) {
+
+    for (const auto& pair : layerPaintProperties) {
         paintPropertyBinders.emplace(
             std::piecewise_construct,
-            std::forward_as_tuple(layer->getID()),
+            std::forward_as_tuple(pair.first),
             std::forward_as_tuple(
-                layer->as<RenderFillLayer>()->evaluated,
-                parameters.tileID.overscaledZ));
+                pair.second,
+                zoom));
     }
 }
 
 void FillBucket::addFeature(const GeometryTileFeature& feature,
                             const GeometryCollection& geometry,
-                            const ImagePositions&) {
+                            const ImagePositions& patternPositions) {
     for (auto& polygon : classifyRings(geometry)) {
         // Optimize polygons with many interior rings for earcut tesselation.
         limitHoles(polygon, 500);
@@ -106,7 +110,7 @@ void FillBucket::addFeature(const GeometryTileFeature& feature,
     }
 
     for (auto& pair : paintPropertyBinders) {
-        pair.second.populateVertexVectors(feature, vertices.vertexSize(), {});
+        pair.second.populateVertexVectors(feature, vertices.vertexSize(), patternPositions);
     }
 }
 

@@ -97,7 +97,9 @@ void LineBucket::addGeometry(const GeometryCoordinates& coordinates, const Geome
 
     const float miterLimit = joinType == LineJoinType::Bevel ? 1.05f : float(layout.get<LineMiterLimit>());
 
-    const double sharpCornerOffset = SHARP_CORNER_OFFSET * (float(util::EXTENT) / (util::tileSize * overscaling));
+    const double sharpCornerOffset = overscaling == 0 ?
+                                    SHARP_CORNER_OFFSET * (float(util::EXTENT) / util::tileSize) :
+                                    SHARP_CORNER_OFFSET * (float(util::EXTENT) / (util::tileSize * overscaling));
 
     const GeometryCoordinate firstCoordinate = coordinates[first];
     const LineCapType beginCap = layout.get<LineCap>();

@@ -7,9 +7,11 @@
 #include <mbgl/renderer/group_by_layout.hpp>
 #include <mbgl/style/filter.hpp>
 #include <mbgl/style/layers/symbol_layer_impl.hpp>
+#include <mbgl/renderer/layers/render_fill_layer.hpp>
+#include <mbgl/renderer/layers/render_fill_extrusion_layer.hpp>
+#include <mbgl/renderer/layers/render_line_layer.hpp>
 #include <mbgl/renderer/layers/render_symbol_layer.hpp>
 #include <mbgl/renderer/buckets/symbol_bucket.hpp>
-#include <mbgl/renderer/buckets/line_bucket.hpp>
 #include <mbgl/util/logging.hpp>
 #include <mbgl/util/constants.hpp>
 #include <mbgl/util/string.hpp>
@@ -197,11 +199,15 @@ void GeometryTileWorker::symbolDependenciesChanged() {
                 assert(hasPendingParseResult());
                 performSymbolLayout();
                 coalesce();
+            } else if (patternNeedsLayout) {
+                performSymbolLayout();
+                coalesce();
             }
+
             break;
 
         case Coalescing:
-            if (symbolLayoutsNeedPreparation) {
+            if (symbolLayoutsNeedPreparation || patternNeedsLayout) {
                 state = NeedsSymbolLayout;
             }
             break;
@@ -334,13 +340,13 @@ void GeometryTileWorker::parse() {
 
     std::vector<std::string> patternOrder;
     for (auto it = layers->rbegin(); it != layers->rend(); it++) {
-        if ((*it)->type == LayerType::Line) {
+        if ((*it)->type == LayerType::Line || (*it)->type == LayerType::Fill || (*it)->type == LayerType::FillExtrusion) {
             patternOrder.push_back((*it)->id);
         }
     }
 
     std::unordered_map<std::string, std::unique_ptr<SymbolLayout>> symbolLayoutMap;
-    std::unordered_map<std::string, std::unique_ptr<PatternLayout<LineBucket, RenderLineLayer>>> patternLayoutMap;
+    std::unordered_map<std::string, variant<std::unique_ptr<LinePatternLayout>, std::unique_ptr<FillPatternLayout>, std::unique_ptr<FillExtrusionPatternLayout>>> patternLayoutMap;
 
     buckets.clear();
     featureIndex = std::make_unique<FeatureIndex>(*data ? (*data)->clone() : nullptr);
@@ -382,10 +388,20 @@ void GeometryTileWorker::parse() {
             symbolLayoutMap.emplace(leader.getID(), std::move(layout));
             symbolLayoutsNeedPreparation = true;
         } else if (leader.is<RenderLineLayer>()) {
-            auto layout = leader.as<RenderLineLayer>()->createLayout(
+            std::unique_ptr<PatternLayout<LineBucket>> layout = leader.as<RenderLineLayer>()->createLayout(
                 parameters, group, std::move(geometryLayer), imageDependencies);
             patternLayoutMap.emplace(leader.getID(), std::move(layout));
-            symbolLayoutsNeedPreparation = true;
+            patternNeedsLayout = true;
+        } else if (leader.is<RenderFillLayer>()) {
+            std::unique_ptr<PatternLayout<FillBucket>> layout = leader.as<RenderFillLayer>()->createLayout(
+                parameters, group, std::move(geometryLayer), imageDependencies);
+            patternLayoutMap.emplace(leader.getID(), std::move(layout));
+            patternNeedsLayout = true;
+        } else if (leader.is<RenderFillExtrusionLayer>()) {
+            std::unique_ptr<PatternLayout<FillExtrusionBucket>> layout = leader.as<RenderFillExtrusionLayer>()->createLayout(
+                parameters, group, std::move(geometryLayer), imageDependencies);
+            patternLayoutMap.emplace(leader.getID(), std::move(layout));
+            patternNeedsLayout = true;
         } else {
             const Filter& filter = leader.baseImpl->filter;
             const std::string& sourceLayerID = leader.baseImpl->sourceLayer;
@@ -483,16 +499,33 @@ void GeometryTileWorker::performSymbolLayout() {
         iconAtlas = makeImageAtlas(imageMap, patternMap);
     }
 
-    for (auto& patternLayout : patternLayouts) {
+    for (auto& value : patternLayouts) {
         if (obsolete) {
             return;
         }
 
-        std::shared_ptr<LineBucket> bucket = patternLayout->createBucket(iconAtlas.patternPositions, featureIndex);
-        for (const auto& pair : patternLayout->layerPaintProperties) {
-            buckets.emplace(pair.first, bucket);
-        }
+        value.match(
+             [&] (const std::unique_ptr<PatternLayout<LineBucket>>& linePatternLayout) {
+                 std::shared_ptr<LineBucket> bucket = linePatternLayout->createBucket(iconAtlas.patternPositions, featureIndex);
+                 for (const auto& pair : linePatternLayout->layerPaintProperties) {
+                    buckets.emplace(pair.first, bucket);
+                }
+             },
+             [&] (const std::unique_ptr<PatternLayout<FillBucket>>& fillPatternLayout) {
+                 std::shared_ptr<FillBucket> bucket = fillPatternLayout->createBucket(iconAtlas.patternPositions, featureIndex);
+                 for (const auto& pair : fillPatternLayout->layerPaintProperties) {
+                    buckets.emplace(pair.first, bucket);
+                }
+             },
+             [&] (const std::unique_ptr<PatternLayout<FillExtrusionBucket>>& fillExtrusionLayout) {
+                 std::shared_ptr<FillExtrusionBucket> bucket = fillExtrusionLayout->createBucket(iconAtlas.patternPositions, featureIndex);
+                 for (const auto& pair : fillExtrusionLayout->layerPaintProperties) {
+                    buckets.emplace(pair.first, bucket);
+                }
+             }
+        );
     }
+    patternNeedsLayout = false;
 
     for (auto& symbolLayout : symbolLayouts) {
         if (obsolete) {

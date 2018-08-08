@@ -64,9 +64,10 @@ TEST(Buckets, CircleBucket) {
 TEST(Buckets, FillBucket) {
     HeadlessBackend backend({ 512, 256 });
     BackendScope scope { backend };
+    style::Properties<>::PossiblyEvaluated layout;
 
     gl::Context context;
-    FillBucket bucket { { {0, 0, 0}, MapMode::Static, 1.0 }, {} };
+    FillBucket bucket { layout, {}, 5.0f, 1};
     ASSERT_FALSE(bucket.hasData());
     ASSERT_FALSE(bucket.needsUpload());
 
@@ -85,7 +86,7 @@ TEST(Buckets, LineBucket) {
     style::LineLayoutProperties::PossiblyEvaluated layout;
 
     gl::Context context;
-    LineBucket bucket { layout, {}, 10.0f, 0 };
+    LineBucket bucket { layout, {}, 10.0f, 1 };
     ASSERT_FALSE(bucket.hasData());
     ASSERT_FALSE(bucket.needsUpload());
 

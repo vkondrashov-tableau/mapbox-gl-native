@@ -23,7 +23,6 @@ MBGL_DEFINE_UNIFORM_SCALAR(float, u_ratio);
 MBGL_DEFINE_UNIFORM_SCALAR(float, u_tex_y_a);
 MBGL_DEFINE_UNIFORM_SCALAR(float, u_tex_y_b);
 MBGL_DEFINE_UNIFORM_SCALAR(float, u_sdfgamma);
-MBGL_DEFINE_UNIFORM_SCALAR(float, u_fade);
 MBGL_DEFINE_UNIFORM_VECTOR(float, 2, u_patternscale_a);
 MBGL_DEFINE_UNIFORM_VECTOR(float, 2, u_patternscale_b);
 MBGL_DEFINE_UNIFORM_VECTOR(float, 2, u_gl_units_to_pixels);
@@ -120,7 +119,7 @@ public:
                                        const TransformState&,
                                        const std::array<float, 2>& pixelsToGLUnits,
                                        Size atlasSize,
-                                       const CrossfadeParameters crossfade,
+                                       const CrossfadeParameters& crossfade,
                                        const float pixelRatio);
 };
 

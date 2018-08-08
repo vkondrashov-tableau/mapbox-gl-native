@@ -4,7 +4,7 @@
 
 namespace mbgl {
 
-template <class B, class L>
+template <class B>
 class PatternLayout {
 public:
     PatternLayout(const BucketParameters& parameters,
@@ -16,16 +16,17 @@ public:
                     zoom(parameters.tileID.overscaledZ),
                     overscaling(parameters.tileID.overscaleFactor()) {
 
-        const L* renderLayer = layers.at(0)->as<L>();
-        const typename L::StyleLayerImpl& leader = renderLayer->impl();
+        using PatternLayer = typename B::RenderLayerType;
+        const auto renderLayer = layers.at(0)->as<PatternLayer>();
+        const typename PatternLayer::StyleLayerImpl& leader = renderLayer->impl();
         layout = leader.layout.evaluate(PropertyEvaluationParameters(zoom));
         sourceLayerID = leader.sourceLayer;
         groupID = renderLayer->getID();
 
         for (const auto& layer : layers) {
-            const typename B::PossiblyEvaluatedPaintProperties evaluatedProps = layer->as<L>()->paintProperties();
+            const typename B::PossiblyEvaluatedPaintProperties evaluatedProps = layer->as<PatternLayer>()->paintProperties();
             layerPaintProperties.emplace(layer->getID(), std::move(evaluatedProps));
-            const auto patterns = evaluatedProps.template get<typename L::PatternProperty>().possibleOutputs();
+            const auto patterns = evaluatedProps.template get<typename PatternLayer::PatternProperty>().possibleOutputs();
 
             for (auto& pattern : patterns) {
                 const auto patternString = pattern.value_or("");

@@ -12,6 +12,7 @@
 #include <mbgl/geometry/feature_index.hpp>
 #include <mbgl/util/math.hpp>
 #include <mbgl/util/intersection_tests.hpp>
+#include <mbgl/tile/geometry_tile.hpp>
 
 namespace mbgl {
 
@@ -26,8 +27,18 @@ const style::FillExtrusionLayer::Impl& RenderFillExtrusionLayer::impl() const {
     return static_cast<const style::FillExtrusionLayer::Impl&>(*baseImpl);
 }
 
-std::unique_ptr<Bucket> RenderFillExtrusionLayer::createBucket(const BucketParameters& parameters, const std::vector<const RenderLayer*>& layers) const {
-    return std::make_unique<FillExtrusionBucket>(parameters, layers);
+std::unique_ptr<Bucket> RenderFillExtrusionLayer::createBucket(const BucketParameters&, const std::vector<const RenderLayer*>&) const {
+    assert(false); // Should be calling createLayout() instead.
+    return nullptr;
+}
+
+
+std::unique_ptr<PatternLayout<FillExtrusionBucket>>
+RenderFillExtrusionLayer::createLayout(const BucketParameters& parameters,
+                              const std::vector<const RenderLayer*>& group,
+                              std::unique_ptr<GeometryTileLayer> layer,
+                              ImageDependencies& imageDependencies) const {
+    return std::make_unique<PatternLayout<FillExtrusionBucket>>(parameters, group, std::move(layer), imageDependencies);
 }
 
 void RenderFillExtrusionLayer::transition(const TransitionParameters& parameters) {
@@ -36,6 +47,7 @@ void RenderFillExtrusionLayer::transition(const TransitionParameters& parameters
 
 void RenderFillExtrusionLayer::evaluate(const PropertyEvaluationParameters& parameters) {
     evaluated = unevaluated.evaluate(parameters);
+    crossfade = parameters.getCrossfadeParameters();
 
     passes = (evaluated.get<style::FillExtrusionOpacity>() > 0)
                  ? (RenderPass::Translucent | RenderPass::Pass3D)
@@ -68,8 +80,10 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
         parameters.context.setStencilMode(gl::StencilMode::disabled());
         parameters.context.clear(Color{ 0.0f, 0.0f, 0.0f, 0.0f }, depthClearValue, {});
 
-        auto draw = [&](auto& programInstance, const auto& tileBucket, auto&& uniformValues) {
+        auto draw = [&](auto& programInstance, const auto& tileBucket, auto&& uniformValues,
+                        const optional<ImagePosition>& patternPositionA, const optional<ImagePosition>& patternPositionB) {
             const auto& paintPropertyBinders = tileBucket.paintPropertyBinders.at(getID());
+            paintPropertyBinders.setPatternParameters(patternPositionA, patternPositionB, crossfade);
 
             const auto allUniformValues = programInstance.computeAllUniformValues(
                 std::move(uniformValues),
@@ -97,8 +111,9 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
                 allAttributeBindings,
                 getID());
         };
-
-        if (evaluated.get<FillExtrusionPattern>().from.empty()) {
+        const auto fillPattern = evaluated.get<FillExtrusionPattern>();
+        const auto fillPatternValue = fillPattern.constantOr(mbgl::Faded<std::basic_string<char> >{ "temp", "temp", 0.0f, 0.0f, 0.0f});
+        if (fillPatternValue.from.empty()) {
             for (const RenderTile& tile : renderTiles) {
                 auto bucket_ = tile.tile.getBucket<FillExtrusionBucket>(*baseImpl);
                 if (!bucket_) {
@@ -115,26 +130,22 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
                                                   parameters.state),
                         parameters.state,
                         parameters.evaluatedLight
-                    )
+                    ),
+                    {}, {}
                 );
             }
         } else {
-            optional<ImagePosition> imagePosA =
-                parameters.imageManager.getPattern(evaluated.get<FillExtrusionPattern>().from);
-            optional<ImagePosition> imagePosB =
-                parameters.imageManager.getPattern(evaluated.get<FillExtrusionPattern>().to);
-
-            if (!imagePosA || !imagePosB) {
-                return;
-            }
-
-            parameters.imageManager.bind(parameters.context, 0);
-
             for (const RenderTile& tile : renderTiles) {
                 auto bucket_ = tile.tile.getBucket<FillExtrusionBucket>(*baseImpl);
                 if (!bucket_) {
                     continue;
                 }
+
+                assert(dynamic_cast<GeometryTile*>(&tile.tile));
+                GeometryTile& geometryTile = static_cast<GeometryTile&>(tile.tile);
+                optional<ImagePosition> patternPosA = geometryTile.getPattern(fillPatternValue.from);
+                optional<ImagePosition> patternPosB = geometryTile.getPattern(fillPatternValue.to);
+                parameters.context.bindTexture(*geometryTile.iconAtlasTexture, 0, gl::TextureFilter::Linear);
                 FillExtrusionBucket& bucket = *bucket_;
 
                 draw(
@@ -144,11 +155,16 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
                         tile.translatedClipMatrix(evaluated.get<FillExtrusionTranslate>(),
                                                   evaluated.get<FillExtrusionTranslateAnchor>(),
                                                   parameters.state),
-                        parameters.imageManager.getPixelSize(), *imagePosA, *imagePosB,
-                        evaluated.get<FillExtrusionPattern>(), tile.id, parameters.state,
+                        geometryTile.iconAtlasTexture->size,
+                        crossfade,
+                        tile.id,
+                        parameters.state,
                         -std::pow(2, tile.id.canonical.z) / util::tileSize / 8.0f,
+                        parameters.pixelRatio,
                         parameters.evaluatedLight
-                    )
+                    ),
+                    patternPosA,
+                    patternPosB
                 );
             }
         }
@@ -196,6 +212,17 @@ void RenderFillExtrusionLayer::render(PaintParameters& parameters, RenderSource*
             allAttributeBindings,
             getID());
     }
+}
+style::FillExtrusionPaintProperties::PossiblyEvaluated RenderFillExtrusionLayer::paintProperties() const {
+    return FillExtrusionPaintProperties::PossiblyEvaluated {
+        evaluated.get<style::FillExtrusionOpacity>(),
+        evaluated.get<style::FillExtrusionColor>(),
+        evaluated.get<style::FillExtrusionTranslate>(),
+        evaluated.get<style::FillExtrusionTranslateAnchor>(),
+        evaluated.get<style::FillExtrusionPattern>(),
+        evaluated.get<style::FillExtrusionHeight>(),
+        evaluated.get<style::FillExtrusionBase>()
+    };
 }
 
 bool RenderFillExtrusionLayer::queryIntersectsFeature(

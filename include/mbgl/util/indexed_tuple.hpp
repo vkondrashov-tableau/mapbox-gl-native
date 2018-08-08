@@ -30,12 +30,12 @@ public:
 
     template <class I>
     auto& get() {
-        return get_polyfill<TypeIndex<I, Is...>::value>(*this);
+        return get_polyfill<TypeIndex<I, Is...>::value, Ts...>(*this);
     }
 
     template <class I>
     const auto& get() const {
-        return get_polyfill<TypeIndex<I, Is...>::value>(*this);
+        return get_polyfill<TypeIndex<I, Is...>::value, Ts...>(*this);
     }
 
     template <class... Us>
@@ -48,6 +48,15 @@ public:
             get<Is>()...,
             other.template get<Js>()...
         };
+    }
+
+    // Help out MSVC++
+    bool operator==(const IndexedTuple<TypeList<Is...>, TypeList<Ts...>>& other) const {
+        return static_cast<const tuple_polyfill<Ts...>&>(*this) == static_cast<const tuple_polyfill<Ts...>&>(other);
+    }
+
+    bool operator!=(const IndexedTuple<TypeList<Is...>, TypeList<Ts...>>& other) const {
+        return !(*this == other);
     }
 };
 

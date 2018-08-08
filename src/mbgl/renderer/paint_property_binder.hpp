@@ -488,7 +488,7 @@ public:
 
     template <class EvaluatedProperties>
     AttributeBindings attributeBindings(const EvaluatedProperties& currentProperties) const {
-        return AttributeBindings { std::tuple_cat(
+        return AttributeBindings { tuple_cat(
            binders.template get<Ps>()->attributeBinding(currentProperties.template get<Ps>())...
         ) };
     }
@@ -500,7 +500,7 @@ public:
     UniformValues uniformValues(float currentZoom, EvaluatedProperties& currentProperties) const {
         (void)currentZoom; // Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56958
         return UniformValues (
-            std::tuple_cat(
+            tuple_cat(
                 // interpolation uniform values
                 binders.template get<Ps>()->interpolationFactor(currentZoom)...,
                 // uniform values
